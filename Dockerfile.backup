@@ -1,0 +1,45 @@
+# Etapa base: PHP con extensiones necesarias
+FROM php:8.3-fpm
+
+# Configurar timezone para Chile
+ENV TZ=America/Santiago
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    unzip \
+    zip \
+    nano \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    gnupg \
+    ca-certificates \
+    nodejs \
+    npm \
+    libreoffice-calc \
+    libreoffice-core \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar extensiones de PHP necesarias
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Crear carpeta de trabajo
+WORKDIR /var/www
+
+# Copiar scripts
+COPY entrypoint.sh /entrypoint.sh
+COPY wait-for-mysql.sh /usr/local/bin/wait-for-mysql.sh
+RUN chmod +x /entrypoint.sh /usr/local/bin/wait-for-mysql.sh
+
+# Entrypoint por defecto
+ENTRYPOINT ["/entrypoint.sh"]

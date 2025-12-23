@@ -228,8 +228,30 @@ function handleClick(button) {
     const estado = button.dataset.estado || 'Pendiente';
 
     const form = document.getElementById('modalForm');
-    document.getElementById('modal-inicio').value = inicio;
-    document.getElementById('modal-fin').value = fin;
+    // Si no hay valor, usar fecha/hora actual en formato compatible con input datetime-local
+    function getNowDatetimeLocal() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hour}:${min}`;
+    }
+    // Lógica: si ambos vacíos, inicializar ambos; si solo inicio tiene valor, solo inicializar fin; si ambos tienen valor, no tocar
+    const inicioInput = document.getElementById('modal-inicio');
+    const finInput = document.getElementById('modal-fin');
+    if (!inicio && !fin) {
+        // Solo inicializar inicio, dejar fin vacío
+        inicioInput.value = getNowDatetimeLocal();
+        finInput.value = '';
+    } else if (inicio && !fin) {
+        inicioInput.value = inicio;
+        finInput.value = getNowDatetimeLocal();
+    } else {
+        inicioInput.value = inicio;
+        finInput.value = fin;
+    }
     document.getElementById('modal-estado').value = estado;
     document.getElementById('modal-fecha').value = "{{ $fecha_malla ?? now()->toDateString() }}";
     form.action = `/procesos/actualizar/${id}`;
